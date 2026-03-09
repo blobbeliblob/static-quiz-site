@@ -117,6 +117,12 @@
           Randomize option order
         </label>
       </div>
+      <div class="form-group mr-all-correct-section hidden">
+        <label>
+          <input type="checkbox" class="q-require-all-correct" checked>
+          Require all correct answers
+        </label>
+      </div>
       <div class="form-group options-section hidden">
         <label class="options-label">Options (select correct answers)</label>
         <div class="options-list"></div>
@@ -164,12 +170,14 @@
     const answersLabel = card.querySelector(".answers-label");
     const caseSensitiveSection = card.querySelector(".case-sensitive-section");
     const randomizeOptionsSection = card.querySelector(".randomize-options-section");
+    const multipleResponseRuleSection = card.querySelector(".mr-all-correct-section");
     const optionsSection = card.querySelector(".options-section");
     const optionsLabel = card.querySelector(".options-label");
 
     if (type === "text" || type === "numerical") {
       optionsSection.classList.add("hidden");
       randomizeOptionsSection.classList.add("hidden");
+      multipleResponseRuleSection.classList.add("hidden");
       answerSection.classList.remove("hidden");
       syncAnswerInputType(card, type);
 
@@ -186,6 +194,12 @@
       answerSection.classList.add("hidden");
       caseSensitiveSection.classList.add("hidden");
       syncOptionControlType(card, type);
+
+      if (type === "multiple_response") {
+        multipleResponseRuleSection.classList.remove("hidden");
+      } else {
+        multipleResponseRuleSection.classList.add("hidden");
+      }
 
       if (type === "multiple_choice") {
         optionsLabel.textContent = "Options (select one correct answer)";
@@ -306,6 +320,10 @@
         q.options = [];
         q.answer = [];
         q.randomize_options = card.querySelector(".q-randomize-options").checked;
+
+        if (type === "multiple_response") {
+          q.require_all_correct = card.querySelector(".q-require-all-correct").checked;
+        }
 
         optionRows.forEach((row) => {
           const optionText = row.querySelector(".option-text").value.trim();
@@ -491,6 +509,16 @@
         shuffleArray(optionsToRender);
       }
 
+      if (q.type === "multiple_response") {
+        const requireAllCorrect = q.require_all_correct !== false;
+        const instruction = document.createElement("p");
+        instruction.className = "question-instruction";
+        instruction.textContent = requireAllCorrect
+          ? "Select all correct options."
+          : "Select at least one correct option. Any incorrect selection counts as wrong.";
+        area.appendChild(instruction);
+      }
+
       optionsToRender.forEach((opt) => {
         const btn = document.createElement("button");
         btn.className = "mc-option";
@@ -566,10 +594,16 @@
         new Set(expectedAnswers.map((a) => String(a).toLowerCase().trim()))
       );
       const expectedSet = new Set(normalizedExpected);
+      const hasOnlyCorrectSelections = normalizedSelected.every((a) => expectedSet.has(a));
+      const hasAtLeastOneCorrectSelection = normalizedSelected.some((a) => expectedSet.has(a));
+      const requireAllCorrect = q.require_all_correct !== false;
 
-      isCorrect =
-        normalizedSelected.length === normalizedExpected.length &&
-        normalizedSelected.every((a) => expectedSet.has(a));
+      if (requireAllCorrect) {
+        isCorrect =
+          hasOnlyCorrectSelections && normalizedSelected.length === normalizedExpected.length;
+      } else {
+        isCorrect = hasOnlyCorrectSelections && hasAtLeastOneCorrectSelection;
+      }
     } else if (q.type === "numerical") {
       const userNumber = Number(userAnswer);
       const expectedNumbers = expectedAnswers

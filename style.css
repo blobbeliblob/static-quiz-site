@@ -440,6 +440,17 @@ select:hover {
   margin-bottom: 1rem;
 }
 
+.question-instruction {
+  margin-bottom: 0.68rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(28, 160, 135, 0.32);
+  background: rgba(28, 160, 135, 0.12);
+  color: var(--color-accent);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
 #answer-area .mc-option {
   display: block;
   width: 100%;
