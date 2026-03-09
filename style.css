@@ -1,15 +1,17 @@
 :root {
-  --color-bg: #f4f0e6;
-  --color-surface: #fffdf7;
-  --color-text: #1e2633;
-  --color-muted: #5d6675;
-  --color-border: #e8d7bf;
-  --color-brand: #e85a2b;
-  --color-accent: #1ca087;
+  --color-bg: #edf2ff;
+  --color-surface: #f9fbff;
+  --color-text: #151b33;
+  --color-muted: #566083;
+  --color-border: #c7d2f0;
+  --color-brand: #ec4d25;
+  --color-brand-rgb: 236, 77, 37;
+  --color-accent: #2bcfce;
+  --color-accent-rgb: 22, 182, 201;
   --radius-md: 10px;
   --radius-lg: 16px;
-  --shadow-soft: 0 20px 38px rgba(56, 43, 20, 0.14);
-  --shadow-card: 0 10px 24px rgba(56, 43, 20, 0.1);
+  --shadow-soft: 0 20px 38px rgba(25, 35, 66, 0.14);
+  --shadow-card: 0 10px 24px rgba(25, 35, 66, 0.1);
 }
 
 * {
@@ -19,7 +21,7 @@
 }
 
 body {
-  font-family: "Montserrat", "Segoe UI", sans-serif;
+  font-family: "Rubik", "Segoe UI", sans-serif;
   color: var(--color-text);
   background: var(--color-bg);
   -webkit-tap-highlight-color: transparent;
@@ -49,12 +51,13 @@ body {
 
 .site-title {
   display: inline-block;
-  font-family: "Monoton", "Montserrat", sans-serif;
+  font-family: "Monoton", "Rubik", sans-serif;
   font-size: clamp(2.1rem, 5vw, 3rem);
   line-height: 1;
   letter-spacing: 0.04em;
   color: var(--color-brand);
   text-decoration: none;
+  text-shadow: 0 0 16px rgba(var(--color-brand-rgb), 0.26);
 }
 
 .site-title:hover {
@@ -76,9 +79,9 @@ body {
 h1,
 h2,
 h3 {
-  font-family: "Monoton", "Montserrat", sans-serif;
+  font-family: "Fraunces", "Rubik", serif;
   color: var(--color-text);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
 }
 
 h1 {
@@ -119,7 +122,7 @@ h3 {
 .btn-primary {
   background: var(--color-brand);
   color: #fff;
-  box-shadow: 0 10px 20px rgba(232, 90, 43, 0.32);
+  box-shadow: 0 10px 20px rgba(var(--color-brand-rgb), 0.32);
 }
 
 .btn-secondary {
@@ -212,7 +215,7 @@ input[type="radio"]:checked::before {
 input[type="checkbox"]:focus-visible,
 input[type="radio"]:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(255, 111, 60, 0.24);
+  box-shadow: 0 0 0 3px rgba(var(--color-brand-rgb), 0.24);
 }
 
 input[type="text"],
@@ -237,7 +240,7 @@ input[type="number"]:focus,
 select:focus,
 textarea:focus {
   border-color: var(--color-brand);
-  box-shadow: 0 0 0 3px rgba(255, 111, 60, 0.2);
+  box-shadow: 0 0 0 3px rgba(var(--color-brand-rgb), 0.2);
   outline: none;
 }
 
@@ -252,7 +255,7 @@ select {
   -moz-appearance: none;
   cursor: pointer;
   padding-right: 2.2rem;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e85a2b'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ff4f87'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
   background-position: right 0.65rem center;
   background-size: 1.1rem 1.1rem;
   background-repeat: no-repeat;
@@ -369,7 +372,7 @@ select:hover {
 
 .add-option-btn:hover,
 .add-answer-btn:hover {
-  background: rgba(255, 111, 60, 0.12);
+  background: rgba(var(--color-brand-rgb), 0.12);
 }
 
 #add-question-btn {
@@ -402,8 +405,8 @@ select:hover {
 }
 
 .link-message.error {
-  background: rgba(255, 111, 60, 0.16);
-  border: 1px solid rgba(255, 111, 60, 0.32);
+  background: rgba(var(--color-brand-rgb), 0.16);
+  border: 1px solid rgba(var(--color-brand-rgb), 0.32);
   color: var(--color-brand);
 }
 
@@ -433,7 +436,7 @@ select:hover {
   width: fit-content;
   padding: 0.2rem 0.7rem;
   border-radius: 999px;
-  background: rgba(28, 160, 135, 0.15);
+  background: rgba(var(--color-accent-rgb), 0.15);
   color: var(--color-accent);
   font-size: 0.88rem;
   font-weight: 700;
@@ -467,8 +470,8 @@ select:hover {
   margin-bottom: 0.68rem;
   padding: 0.4rem 0.7rem;
   border-radius: var(--radius-md);
-  border: 1px solid rgba(28, 160, 135, 0.32);
-  background: rgba(28, 160, 135, 0.12);
+  border: 1px solid rgba(var(--color-accent-rgb), 0.32);
+  background: rgba(var(--color-accent-rgb), 0.12);
   color: var(--color-accent);
   font-size: 0.9rem;
   font-weight: 600;
@@ -497,7 +500,7 @@ select:hover {
 
 #answer-area .mc-option.selected {
   border-color: var(--color-brand);
-  background: rgba(255, 111, 60, 0.14);
+  background: rgba(var(--color-brand-rgb), 0.14);
 }
 
 #feedback {
@@ -508,15 +511,15 @@ select:hover {
 }
 
 #feedback.correct {
-  background: rgba(28, 160, 135, 0.14);
+  background: rgba(var(--color-accent-rgb), 0.14);
   color: var(--color-accent);
-  border: 1px solid rgba(28, 160, 135, 0.35);
+  border: 1px solid rgba(var(--color-accent-rgb), 0.35);
 }
 
 #feedback.incorrect {
-  background: rgba(255, 111, 60, 0.16);
+  background: rgba(var(--color-brand-rgb), 0.16);
   color: var(--color-brand);
-  border: 1px solid rgba(255, 111, 60, 0.34);
+  border: 1px solid rgba(var(--color-brand-rgb), 0.34);
 }
 
 #quiz-results {
