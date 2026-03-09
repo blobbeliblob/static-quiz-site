@@ -1,13 +1,10 @@
 :root {
   --color-bg: #f4f0e6;
-  --color-bg-alt: #ece5d2;
   --color-surface: #fffdf7;
-  --color-surface-strong: #fff4dc;
   --color-text: #1e2633;
   --color-muted: #5d6675;
   --color-border: #e8d7bf;
-  --color-brand: #ff6f3c;
-  --color-brand-strong: #e85a2b;
+  --color-brand: #e85a2b;
   --color-accent: #1ca087;
   --radius-md: 10px;
   --radius-lg: 16px;
@@ -22,12 +19,9 @@
 }
 
 body {
-  font-family: "Inter", "Segoe UI", sans-serif;
+  font-family: "Montserrat", "Segoe UI", sans-serif;
   color: var(--color-text);
-  background:
-    radial-gradient(circle at 7% 12%, rgba(255, 111, 60, 0.24) 0%, rgba(255, 111, 60, 0) 38%),
-    radial-gradient(circle at 95% 4%, rgba(28, 160, 135, 0.2) 0%, rgba(28, 160, 135, 0) 34%),
-    linear-gradient(160deg, var(--color-bg) 0%, var(--color-bg-alt) 100%);
+  background: var(--color-bg);
   -webkit-tap-highlight-color: transparent;
   line-height: 1.5;
   min-height: 100vh;
@@ -39,12 +33,40 @@ body {
 #app {
   width: 100%;
   max-width: 780px;
-  background: rgba(255, 253, 247, 0.9);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: calc(var(--radius-lg) + 4px);
   box-shadow: var(--shadow-soft);
-  backdrop-filter: blur(3px);
   padding: clamp(1rem, 2.6vw, 2rem);
+}
+
+.site-header {
+  text-align: center;
+  padding-bottom: 0.95rem;
+  margin-bottom: 1.2rem;
+  border-bottom: 1px dashed var(--color-border);
+}
+
+.site-title {
+  display: inline-block;
+  font-family: "Monoton", "Montserrat", sans-serif;
+  font-size: clamp(2.1rem, 5vw, 3rem);
+  line-height: 1;
+  letter-spacing: 0.04em;
+  color: var(--color-brand);
+  text-decoration: none;
+}
+
+.site-title:hover {
+  opacity: 0.9;
+}
+
+.site-subtitle {
+  margin-top: 0.45rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--color-muted);
 }
 
 .hidden {
@@ -54,9 +76,9 @@ body {
 h1,
 h2,
 h3 {
-  font-family: "Gloock", Georgia, serif;
+  font-family: "Monoton", "Montserrat", sans-serif;
   color: var(--color-text);
-  letter-spacing: 0.01em;
+  letter-spacing: 0.02em;
 }
 
 h1 {
@@ -95,7 +117,7 @@ h3 {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--color-brand) 0%, var(--color-brand-strong) 100%);
+  background: var(--color-brand);
   color: #fff;
   box-shadow: 0 10px 20px rgba(232, 90, 43, 0.32);
 }
@@ -175,7 +197,7 @@ input[type="radio"]:hover {
 
 input[type="checkbox"]:checked,
 input[type="radio"]:checked {
-  border-color: var(--color-brand-strong);
+  border-color: var(--color-brand);
   background: var(--color-brand);
 }
 
@@ -229,16 +251,10 @@ select {
   -webkit-appearance: none;
   -moz-appearance: none;
   cursor: pointer;
-  padding-right: 2.5rem;
-  background-image:
-    linear-gradient(45deg, transparent 50%, var(--color-brand-strong) 50%),
-    linear-gradient(135deg, var(--color-brand-strong) 50%, transparent 50%),
-    linear-gradient(to right, rgba(232, 90, 43, 0.25), rgba(232, 90, 43, 0.25));
-  background-position:
-    calc(100% - 1.05rem) calc(50% - 2px),
-    calc(100% - 0.7rem) calc(50% - 2px),
-    calc(100% - 2rem) 50%;
-  background-size: 7px 7px, 7px 7px, 1px 62%;
+  padding-right: 2.2rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e85a2b'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-position: right 0.65rem center;
+  background-size: 1.1rem 1.1rem;
   background-repeat: no-repeat;
 }
 
@@ -247,7 +263,7 @@ select:hover {
 }
 
 .question-card {
-  background: linear-gradient(165deg, var(--color-surface) 0%, var(--color-surface-strong) 100%);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-left: 5px solid var(--color-accent);
   border-radius: var(--radius-lg);
@@ -259,7 +275,7 @@ select:hover {
 
 .question-card h3 {
   margin-bottom: 0.75rem;
-  color: var(--color-brand-strong);
+  color: var(--color-brand);
 }
 
 .question-card .form-group {
@@ -282,7 +298,7 @@ select:hover {
 }
 
 .remove-question-btn:hover {
-  color: var(--color-brand-strong);
+  color: var(--color-brand);
 }
 
 .options-list {
@@ -335,7 +351,7 @@ select:hover {
 
 .option-row button:hover,
 .answer-row button:hover {
-  color: var(--color-brand-strong);
+  color: var(--color-brand);
 }
 
 .add-option-btn,
@@ -347,7 +363,7 @@ select:hover {
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  color: var(--color-brand-strong);
+  color: var(--color-brand);
   margin-top: 0.42rem;
 }
 
@@ -366,7 +382,7 @@ select:hover {
 }
 
 #link-output {
-  background: linear-gradient(160deg, var(--color-surface) 0%, var(--color-surface-strong) 100%);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
@@ -375,7 +391,7 @@ select:hover {
 
 #link-output h2 {
   margin-bottom: 0.8rem;
-  color: var(--color-brand-strong);
+  color: var(--color-brand);
 }
 
 .link-message {
@@ -388,7 +404,7 @@ select:hover {
 .link-message.error {
   background: rgba(255, 111, 60, 0.16);
   border: 1px solid rgba(255, 111, 60, 0.32);
-  color: var(--color-brand-strong);
+  color: var(--color-brand);
 }
 
 #quiz-link {
@@ -398,7 +414,7 @@ select:hover {
 #quiz-start,
 #quiz-question,
 #quiz-results {
-  background: linear-gradient(165deg, var(--color-surface) 0%, var(--color-surface-strong) 100%);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
@@ -480,7 +496,7 @@ select:hover {
 }
 
 #answer-area .mc-option.selected {
-  border-color: var(--color-brand-strong);
+  border-color: var(--color-brand);
   background: rgba(255, 111, 60, 0.14);
 }
 
@@ -499,7 +515,7 @@ select:hover {
 
 #feedback.incorrect {
   background: rgba(255, 111, 60, 0.16);
-  color: var(--color-brand-strong);
+  color: var(--color-brand);
   border: 1px solid rgba(255, 111, 60, 0.34);
 }
 
@@ -511,7 +527,7 @@ select:hover {
 #score-text {
   font-size: 1.4rem;
   font-weight: 700;
-  color: var(--color-brand-strong);
+  color: var(--color-brand);
   margin-bottom: 1.4rem;
 }
 
