@@ -100,9 +100,16 @@
           <option value="multiple_response">Multiple Response</option>
         </select>
       </div>
+      <div class="form-group case-sensitive-section">
+        <label>
+          <input type="checkbox" class="q-case-sensitive">
+          Case-sensitive answers
+        </label>
+      </div>
       <div class="form-group answer-section">
-        <label>Accepted Answer(s)</label>
-        <input type="text" class="q-answer" placeholder="separate, multiple, answers, with, commas">
+        <label class="answers-label">Accepted Answer(s)</label>
+        <div class="answers-list"></div>
+        <button class="add-answer-btn">+ Add Answer</button>
       </div>
       <div class="form-group randomize-options-section hidden">
         <label>
@@ -130,18 +137,32 @@
     const typeSelect = card.querySelector(".q-type");
     typeSelect.onchange = () => toggleType(card, typeSelect.value);
 
+    // Add accepted answer
+    card.querySelector(".add-answer-btn").onclick = (event) => {
+      event.preventDefault();
+      addAnswer(card);
+    };
+
     // Add option
-    card.querySelector(".add-option-btn").onclick = () => addOption(card);
+    card.querySelector(".add-option-btn").onclick = (event) => {
+      event.preventDefault();
+      addOption(card);
+    };
+
+    // Seed one accepted answer by default
+    addAnswer(card);
 
     // Seed two options for MC
     addOption(card);
     addOption(card);
+
+    toggleType(card, "text");
   }
 
   function toggleType(card, type) {
     const answerSection = card.querySelector(".answer-section");
-    const answerLabel = card.querySelector(".answer-section label");
-    const answerInput = card.querySelector(".q-answer");
+    const answersLabel = card.querySelector(".answers-label");
+    const caseSensitiveSection = card.querySelector(".case-sensitive-section");
     const randomizeOptionsSection = card.querySelector(".randomize-options-section");
     const optionsSection = card.querySelector(".options-section");
     const optionsLabel = card.querySelector(".options-label");
@@ -150,18 +171,20 @@
       optionsSection.classList.add("hidden");
       randomizeOptionsSection.classList.add("hidden");
       answerSection.classList.remove("hidden");
+      syncAnswerInputType(card, type);
 
       if (type === "numerical") {
-        answerLabel.textContent = "Accepted Number(s)";
-        answerInput.placeholder = "e.g. 3.14, -2, 42";
+        caseSensitiveSection.classList.add("hidden");
+        answersLabel.textContent = "Accepted Number(s)";
       } else {
-        answerLabel.textContent = "Accepted Answer(s)";
-        answerInput.placeholder = "separate, multiple, answers, with, commas";
+        caseSensitiveSection.classList.remove("hidden");
+        answersLabel.textContent = "Accepted Answer(s)";
       }
     } else {
       optionsSection.classList.remove("hidden");
       randomizeOptionsSection.classList.remove("hidden");
       answerSection.classList.add("hidden");
+      caseSensitiveSection.classList.add("hidden");
       syncOptionControlType(card, type);
 
       if (type === "multiple_choice") {
@@ -176,6 +199,21 @@
         optionsLabel.textContent = "Options (select correct answers)";
       }
     }
+  }
+
+  function syncAnswerInputType(card, type) {
+    const answerInputs = card.querySelectorAll(".answers-list .answer-value");
+    answerInputs.forEach((input) => {
+      if (type === "numerical") {
+        input.type = "number";
+        input.step = "any";
+        input.placeholder = "e.g. 3.14";
+      } else {
+        input.type = "text";
+        input.removeAttribute("step");
+        input.placeholder = "Accepted answer";
+      }
+    });
   }
 
   function syncOptionControlType(card, type) {
@@ -228,6 +266,20 @@
     syncOptionControlType(card, card.querySelector(".q-type").value);
   }
 
+  function addAnswer(card) {
+    const list = card.querySelector(".answers-list");
+    const row = document.createElement("div");
+    row.className = "answer-row";
+    row.innerHTML = `
+      <input type="text" class="answer-value" placeholder="Accepted answer">
+      <button title="Remove">&times;</button>
+    `;
+
+    row.querySelector("button").onclick = () => row.remove();
+    list.appendChild(row);
+    syncAnswerInputType(card, card.querySelector(".q-type").value);
+  }
+
   function renumberQuestions() {
     const cards = document.querySelectorAll(".question-card");
     cards.forEach((card, i) => {
@@ -265,8 +317,14 @@
           }
         });
       } else {
-        const answerRaw = card.querySelector(".q-answer").value.trim();
-        q.answer = answerRaw.split(",").map((s) => s.trim()).filter(Boolean);
+        const answerInputs = card.querySelectorAll(".answers-list .answer-value");
+        q.answer = Array.from(answerInputs)
+          .map((input) => input.value.trim())
+          .filter(Boolean);
+
+        if (type === "text") {
+          q.case_sensitive = card.querySelector(".q-case-sensitive").checked;
+        }
       }
 
       questions.push(q);
@@ -310,6 +368,14 @@
     const data = buildQuizData();
     if (data.questions.length === 0) {
       showLinkMessage("Add at least one question with text.", true);
+      return;
+    }
+
+    const invalidText = data.questions.some(
+      (q) => q.type === "text" && q.answer.length === 0
+    );
+    if (invalidText) {
+      showLinkMessage("Each text question needs at least one accepted answer.", true);
       return;
     }
 
@@ -464,6 +530,7 @@
 
   function submitAnswer() {
     const q = quizData.questions[currentQuestion];
+    const expectedAnswers = Array.isArray(q.answer) ? q.answer : [];
     let userAnswer = "";
     let userAnswers = [];
 
@@ -495,7 +562,9 @@
     let isCorrect = false;
     if (q.type === "multiple_response") {
       const normalizedSelected = Array.from(new Set(userAnswers.map((a) => a.toLowerCase().trim())));
-      const normalizedExpected = Array.from(new Set(q.answer.map((a) => a.toLowerCase().trim())));
+      const normalizedExpected = Array.from(
+        new Set(expectedAnswers.map((a) => String(a).toLowerCase().trim()))
+      );
       const expectedSet = new Set(normalizedExpected);
 
       isCorrect =
@@ -503,18 +572,31 @@
         normalizedSelected.every((a) => expectedSet.has(a));
     } else if (q.type === "numerical") {
       const userNumber = Number(userAnswer);
-      const expectedNumbers = q.answer
+      const expectedNumbers = expectedAnswers
         .map((value) => Number(value))
         .filter((value) => Number.isFinite(value));
       const tolerance = 1e-9;
 
       isCorrect = expectedNumbers.some((value) => Math.abs(value - userNumber) <= tolerance);
+    } else if (q.type === "text") {
+      if (q.case_sensitive) {
+        isCorrect = expectedAnswers.some((a) => String(a).trim() === userAnswer);
+      } else {
+        const normalizedUser = userAnswer.toLowerCase();
+        isCorrect = expectedAnswers.some(
+          (a) => String(a).toLowerCase().trim() === normalizedUser
+        );
+      }
     } else {
-      isCorrect = q.answer.some((a) => a.toLowerCase() === userAnswer.toLowerCase());
+      isCorrect = expectedAnswers.some(
+        (a) => String(a).toLowerCase() === userAnswer.toLowerCase()
+      );
     }
 
+    const expectedDisplay = expectedAnswers.map((value) => String(value));
+
     if (isCorrect) score++;
-    answers.push({ question: q.question, userAnswer, correct: isCorrect, expected: q.answer });
+    answers.push({ question: q.question, userAnswer, correct: isCorrect, expected: expectedDisplay });
 
     document.getElementById("submit-answer-btn").classList.add("hidden");
 
@@ -526,7 +608,7 @@
         fb.textContent = "Correct!";
       } else {
         fb.classList.add("incorrect");
-        fb.textContent = "Incorrect. Correct answer(s): " + q.answer.join(", ");
+        fb.textContent = "Incorrect. Correct answer(s): " + expectedDisplay.join(", ");
       }
     }
 

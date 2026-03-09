@@ -198,7 +198,14 @@ textarea {
   gap: 0.42rem;
 }
 
-.option-row {
+.answers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.42rem;
+}
+
+.option-row,
+.answer-row {
   display: flex;
   gap: 0.5rem;
   align-items: center;
@@ -222,11 +229,14 @@ textarea {
   height: 1rem;
 }
 
-.option-row input[type="text"] {
+.option-row input[type="text"],
+.answer-row input[type="text"],
+.answer-row input[type="number"] {
   flex: 1;
 }
 
-.option-row button {
+.option-row button,
+.answer-row button {
   background: none;
   border: none;
   cursor: pointer;
@@ -234,11 +244,13 @@ textarea {
   font-size: 1.15rem;
 }
 
-.option-row button:hover {
+.option-row button:hover,
+.answer-row button:hover {
   color: var(--color-brand-strong);
 }
 
-.add-option-btn {
+.add-option-btn,
+.add-answer-btn {
   background: var(--color-surface);
   border: 1px dashed var(--color-brand);
   border-radius: 999px;
@@ -250,7 +262,8 @@ textarea {
   margin-top: 0.42rem;
 }
 
-.add-option-btn:hover {
+.add-option-btn:hover,
+.add-answer-btn:hover {
   background: rgba(255, 111, 60, 0.12);
 }
 
@@ -445,11 +458,13 @@ textarea {
     padding: 1rem;
   }
 
-  .option-row {
+  .option-row,
+  .answer-row {
     flex-wrap: wrap;
   }
 
-  .option-row button {
+  .option-row button,
+  .answer-row button {
     margin-left: auto;
   }
 
