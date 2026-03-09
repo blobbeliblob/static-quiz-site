@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz</title>
+  <link rel="icon" type="image/x-icon" href="./favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Syne:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
+</head>
+<body>
+  <div id="app">
+    <!-- Quiz Creator View -->
+    <div id="creator-view" class="view hidden">
+      <h1>Create a Quiz</h1>
+
+      <div class="form-group">
+        <label>
+          <input type="checkbox" id="show-answer-toggle" checked>
+          Show the correct answer after each question
+        </label>
+      </div>
+
+      <div id="questions-container"></div>
+
+      <button id="add-question-btn" class="btn btn-secondary">+ Add Question</button>
+
+      <div class="actions">
+        <button id="generate-link-btn" class="btn btn-primary">Generate Quiz Link</button>
+      </div>
+
+      <div id="link-output" class="hidden">
+        <h2>Your Quiz Link</h2>
+        <p id="link-message" class="link-message hidden"></p>
+        <input type="text" id="quiz-link" readonly>
+        <button id="copy-link-btn" class="btn btn-secondary">Copy</button>
+      </div>
+    </div>
+
+    <!-- Quiz Hosting View -->
+    <div id="quiz-view" class="view hidden">
+      <div id="quiz-start">
+        <h1 id="quiz-title">Quiz</h1>
+        <p id="quiz-info"></p>
+        <button id="start-quiz-btn" class="btn btn-primary">Start Quiz</button>
+      </div>
+
+      <div id="quiz-question" class="hidden">
+        <div class="progress-bar">
+          <span id="progress-text"></span>
+        </div>
+        <h2 id="question-text"></h2>
+        <img id="question-image" class="hidden" alt="Question image">
+        <div id="answer-area"></div>
+        <button id="submit-answer-btn" class="btn btn-primary">Submit</button>
+        <div id="feedback" class="hidden"></div>
+        <button id="next-question-btn" class="btn btn-secondary hidden">Next</button>
+      </div>
+
+      <div id="quiz-results" class="hidden">
+        <h1>Quiz Complete!</h1>
+        <p id="score-text"></p>
+        <div id="results-breakdown"></div>
+        <button id="restart-btn" class="btn btn-secondary">Restart Quiz</button>
+        <a id="create-new-link" href="" class="btn btn-primary">Create Your Own Quiz</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
