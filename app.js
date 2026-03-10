@@ -101,6 +101,10 @@
         <textarea class="q-text" placeholder="Enter your question"></textarea>
       </div>
       <div class="form-group">
+        <label>Additional Info (optional)</label>
+        <textarea class="q-note" placeholder="Shown after the question is answered"></textarea>
+      </div>
+      <div class="form-group">
         <label>Image URL (optional)</label>
         <input type="url" class="q-image" placeholder="https://...">
       </div>
@@ -334,6 +338,7 @@
   }
 
   function buildQuizData() {
+    const quizName = document.getElementById("quiz-name-input").value.trim();
     const showAnswer = document.getElementById("show-answer-toggle").checked;
     const showFinalResults = document.getElementById("show-final-results-toggle").checked;
     const cards = document.querySelectorAll(".question-card");
@@ -346,6 +351,12 @@
       const image = card.querySelector(".q-image").value.trim();
       const type = card.querySelector(".q-type").value;
       const q = { q: text, t: type, a: [] };
+
+      const note = card.querySelector(".q-note").value.trim();
+      if (note) {
+        q.nt = note;
+      }
+
       if (image) {
         q.i = image;
 
@@ -388,7 +399,12 @@
       questions.push(q);
     }
 
-    return { sa: showAnswer, sr: showFinalResults, qs: questions };
+    const data = { sa: showAnswer, sr: showFinalResults, qs: questions };
+    if (quizName) {
+      data.n = quizName;
+    }
+
+    return data;
   }
 
   function showLinkMessage(message, isError) {
@@ -512,6 +528,9 @@
       return;
     }
 
+    const title = typeof quizData.n === "string" ? quizData.n.trim() : "";
+    document.getElementById("quiz-title").textContent = title || "Quiz";
+
     document.getElementById("quiz-info").textContent =
       quizData.qs.length + " question" + (quizData.qs.length !== 1 ? "s" : "");
     document.getElementById("start-quiz-btn").onclick = startQuiz;
@@ -542,7 +561,7 @@
       img.classList.remove("hidden");
 
       if (q.ia) {
-        attribution.textContent = "Source: " + q.ia;
+        attribution.textContent = "Image by " + q.ia;
         attribution.classList.remove("hidden");
       } else {
         attribution.textContent = "";
@@ -607,7 +626,10 @@
     // Reset buttons / feedback
     document.getElementById("feedback").classList.add("hidden");
     document.getElementById("feedback").className = "hidden";
+    document.getElementById("question-note").className = "hidden";
+    document.getElementById("question-note").textContent = "";
     document.getElementById("next-question-btn").classList.add("hidden");
+    document.getElementById("next-question-btn").textContent = "Next";
     document.getElementById("submit-answer-btn").classList.remove("hidden");
     document.getElementById("submit-answer-btn").onclick = submitAnswer;
   }
@@ -684,9 +706,11 @@
     }
 
     const expectedDisplay = expectedAnswers.map((value) => String(value));
+    const questionNote = typeof q.nt === "string" ? q.nt.trim() : "";
+    const hasQuestionNote = Boolean(questionNote);
 
     if (isCorrect) score++;
-  answers.push({ question: q.q, userAnswer, correct: isCorrect, expected: expectedDisplay });
+    answers.push({ question: q.q, userAnswer, correct: isCorrect, expected: expectedDisplay });
 
     document.getElementById("submit-answer-btn").classList.add("hidden");
 
@@ -702,21 +726,30 @@
       }
     }
 
-    if (currentQuestion < quizData.qs.length - 1) {
-      const nextBtn = document.getElementById("next-question-btn");
-      nextBtn.classList.remove("hidden");
-      nextBtn.onclick = () => {
-        currentQuestion++;
-        showQuestion();
-      };
-      // If not showing answers, auto-advance
-      if (!quizData.sa) {
+    if (hasQuestionNote) {
+      const noteBox = document.getElementById("question-note");
+      noteBox.textContent = questionNote;
+      noteBox.classList.remove("hidden");
+    }
+
+    const shouldPauseAfterSubmit = quizData.sa || hasQuestionNote;
+    const isLastQuestion = currentQuestion >= quizData.qs.length - 1;
+    const nextBtn = document.getElementById("next-question-btn");
+
+    if (!isLastQuestion) {
+      if (shouldPauseAfterSubmit) {
+        nextBtn.classList.remove("hidden");
+        nextBtn.textContent = "Next";
+        nextBtn.onclick = () => {
+          currentQuestion++;
+          showQuestion();
+        };
+      } else {
         currentQuestion++;
         showQuestion();
       }
     } else {
-      if (quizData.sa) {
-        const nextBtn = document.getElementById("next-question-btn");
+      if (shouldPauseAfterSubmit) {
         nextBtn.classList.remove("hidden");
         nextBtn.textContent = shouldShowFinalResults() ? "See Results" : "Finish";
         nextBtn.onclick = showResults;

@@ -5,6 +5,9 @@ schema = {
   // sr: show final score and answer breakdown at quiz end
   "sr": true,
 
+  // n: custom quiz name shown when starting the quiz (optional)
+  "n": "General Knowledge Challenge",
+
   // qs: questions array
   "qs": [
     {
@@ -16,6 +19,9 @@ schema = {
 
       // a: accepted answer(s)
       "a": ["Paris", "The City of Light"],
+
+      // nt: additional info shown after answering (optional)
+      "nt": "Paris is nicknamed the City of Light due to its historical role in art and science.",
 
       // cs: case sensitive (text questions only)
       "cs": false,
