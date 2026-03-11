@@ -2,21 +2,62 @@
   "use strict";
 
   // --- Compression / Decompression helpers ---
-  function compressQuiz(data) {
-    const json = JSON.stringify(data);
-    const compressed = pako.deflate(new TextEncoder().encode(json));
-    return btoa(String.fromCharCode(...compressed))
+  const textEncoder = new TextEncoder();
+  const textDecoder = new TextDecoder();
+
+  function bytesToBase64Url(bytes) {
+    let binary = "";
+    const chunkSize = 0x8000;
+
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      const chunk = bytes.subarray(i, i + chunkSize);
+      binary += String.fromCharCode(...chunk);
+    }
+
+    return btoa(binary)
       .replace(/\+/g, "-")
       .replace(/\//g, "_")
       .replace(/=+$/, "");
   }
 
-  function decompressQuiz(encoded) {
+  function base64UrlToBytes(encoded) {
     const base64 = encoded.replace(/-/g, "+").replace(/_/g, "/");
-    const binary = atob(base64);
-    const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
-    const decompressed = pako.inflate(bytes);
-    return JSON.parse(new TextDecoder().decode(decompressed));
+    const paddedBase64 = base64 + "=".repeat((4 - (base64.length % 4)) % 4);
+    const binary = atob(paddedBase64);
+    const bytes = new Uint8Array(binary.length);
+
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+
+    return bytes;
+  }
+
+  async function compressQuiz(data) {
+    if (typeof CompressionStream !== "function") {
+      throw new Error("CompressionStream is not available in this browser");
+    }
+
+    const json = JSON.stringify(data);
+    const inputBytes = textEncoder.encode(json);
+    const compressedStream = new Blob([inputBytes])
+      .stream()
+      .pipeThrough(new CompressionStream("deflate"));
+    const compressedBuffer = await new Response(compressedStream).arrayBuffer();
+    return bytesToBase64Url(new Uint8Array(compressedBuffer));
+  }
+
+  async function decompressQuiz(encoded) {
+    if (typeof DecompressionStream !== "function") {
+      throw new Error("DecompressionStream is not available in this browser");
+    }
+
+    const compressedBytes = base64UrlToBytes(encoded);
+    const decompressedStream = new Blob([compressedBytes])
+      .stream()
+      .pipeThrough(new DecompressionStream("deflate"));
+    const decompressedBuffer = await new Response(decompressedStream).arrayBuffer();
+    return JSON.parse(textDecoder.decode(new Uint8Array(decompressedBuffer)));
   }
 
   function shuffleArray(items) {
@@ -44,7 +85,7 @@
   }
 
   // --- Routing ---
-  function route() {
+  async function route() {
     const hash = window.location.hash.slice(1);
     if (!hash) {
       showMainView();
@@ -56,7 +97,7 @@
       return;
     }
 
-    showQuizView(hash);
+    await showQuizView(hash);
   }
 
   function showMainView() {
@@ -438,7 +479,7 @@
     linkMessage.classList.remove("error");
   }
 
-  function generateLink() {
+  async function generateLink() {
     const data = buildQuizData();
     if (data.qs.length === 0) {
       showLinkMessage("Add at least one question with text.", true);
@@ -488,9 +529,16 @@
       return;
     }
 
-    const compressed = compressQuiz(data);
-    const url = window.location.origin + window.location.pathname + "#" + compressed;
-    showGeneratedLink(url);
+    try {
+      const compressed = await compressQuiz(data);
+      const url = window.location.origin + window.location.pathname + "#" + compressed;
+      showGeneratedLink(url);
+    } catch {
+      showLinkMessage(
+        "Your browser does not support CompressionStream. Try a recent browser version.",
+        true
+      );
+    }
   }
 
   function copyLink() {
@@ -514,13 +562,13 @@
   let score = 0;
   let answers = [];
 
-  function showQuizView(hash) {
+  async function showQuizView(hash) {
     document.getElementById("main-view").classList.add("hidden");
     document.getElementById("creator-view").classList.add("hidden");
     document.getElementById("quiz-view").classList.remove("hidden");
 
     try {
-      quizData = decompressQuiz(hash);
+      quizData = await decompressQuiz(hash);
     } catch {
       document.getElementById("quiz-start").innerHTML =
         "<h1>Invalid Quiz</h1><p>The quiz link appears to be broken or corrupted.</p>" +

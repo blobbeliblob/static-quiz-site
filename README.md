@@ -25,7 +25,7 @@ For questions/feedback, feel free to email `camilo@cmlo.dev`
 
 1. The creator builds a quiz object.
 2. The object is serialized to JSON.
-3. JSON is compressed with `pako.deflate`.
+3. JSON is compressed with the browser-native `CompressionStream` API (`deflate`).
 4. The compressed bytes are base64url encoded.
 5. The encoded payload is placed in the URL hash.
 6. The host view decodes and inflates the payload at runtime.
