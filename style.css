@@ -581,6 +581,12 @@ select:hover {
   padding: 2.8rem 1.1rem;
 }
 
+#quiz-info {
+  font-size: 1.05rem;
+  color: var(--color-muted);
+  margin-bottom: 1.4rem;
+}
+
 #quiz-question {
   padding: 1.15rem;
 }
