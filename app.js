@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const SCHEMA_VERSION = "1.0.0";
+  const SCHEMA_VERSION = "1.1.0";
   const QUESTION_TYPES = new Set([
     "text",
     "numerical",
@@ -128,6 +128,10 @@
       throw new Error("Invalid quiz name");
     }
 
+    if ("p" in rawQuizData && typeof rawQuizData.p !== "string") {
+      throw new Error("Invalid quiz password");
+    }
+
     if (!Array.isArray(rawQuizData.qs) || rawQuizData.qs.length === 0) {
       throw new Error("Quiz must include at least one question");
     }
@@ -145,6 +149,11 @@
     const quizName = typeof rawQuizData.n === "string" ? rawQuizData.n.trim() : "";
     if (quizName) {
       normalizedQuiz.n = quizName;
+    }
+
+    const quizPassword = typeof rawQuizData.p === "string" ? rawQuizData.p.trim() : "";
+    if (quizPassword) {
+      normalizedQuiz.p = quizPassword;
     }
 
     rawQuizData.qs.forEach((rawQuestion, index) => {
@@ -260,51 +269,205 @@
     return normalizedQuiz;
   }
 
+  let pendingCreatorQuizData = null;
+
   // --- Routing ---
   async function route() {
     const hash = window.location.hash.slice(1);
     if (!hash) {
+      pendingCreatorQuizData = null;
       showMainView();
       return;
     }
 
     if (hash === "create") {
-      showCreatorView();
+      const prefillQuizData = pendingCreatorQuizData;
+      pendingCreatorQuizData = null;
+      showCreatorView(prefillQuizData);
       return;
     }
 
+    if (hash === "edit") {
+      showMainView();
+      showEditOverlay();
+      return;
+    }
+
+    pendingCreatorQuizData = null;
     await showQuizView(hash);
   }
 
   function showMainView() {
+    hideEditOverlay();
     document.getElementById("main-view").classList.remove("hidden");
     document.getElementById("creator-view").classList.add("hidden");
     document.getElementById("quiz-view").classList.add("hidden");
   }
 
+  function showEditOverlay() {
+    const overlay = document.getElementById("edit-overlay");
+    const urlInput = document.getElementById("edit-quiz-url-input");
+    const passwordInput = document.getElementById("edit-quiz-password-input");
+    clearEditOverlayMessage();
+    urlInput.value = "";
+    passwordInput.value = "";
+    overlay.classList.remove("hidden");
+    urlInput.focus();
+  }
+
+  function hideEditOverlay() {
+    document.getElementById("edit-overlay").classList.add("hidden");
+  }
+
+  function clearEditOverlayMessage() {
+    const message = document.getElementById("edit-overlay-message");
+    message.textContent = "";
+    message.classList.add("hidden");
+    message.classList.remove("error");
+  }
+
+  function showEditOverlayMessage(message, isError) {
+    const messageElement = document.getElementById("edit-overlay-message");
+    messageElement.textContent = message;
+    messageElement.classList.remove("hidden");
+    messageElement.classList.toggle("error", Boolean(isError));
+  }
+
+  function extractQuizHashFromInput(inputValue) {
+    const trimmed = inputValue.trim();
+    if (!trimmed) {
+      throw new Error("Paste the quiz URL you want to edit.");
+    }
+
+    if (trimmed.startsWith("#")) {
+      const hashValue = trimmed.slice(1).trim();
+      if (!hashValue || hashValue === "create" || hashValue === "edit") {
+        throw new Error("That link does not contain a quiz payload.");
+      }
+      return hashValue;
+    }
+
+    let parsedUrl;
+    try {
+      parsedUrl = new URL(trimmed);
+    } catch {
+      throw new Error("Enter a valid quiz URL.");
+    }
+
+    const hashValue = parsedUrl.hash.slice(1).trim();
+    if (!hashValue || hashValue === "create" || hashValue === "edit") {
+      throw new Error("That link does not contain a quiz payload.");
+    }
+
+    return hashValue;
+  }
+
+  async function submitEditQuizForm(event) {
+    event.preventDefault();
+    clearEditOverlayMessage();
+
+    const quizUrl = document.getElementById("edit-quiz-url-input").value;
+    const enteredPassword = document.getElementById("edit-quiz-password-input").value.trim();
+
+    let encodedHash;
+    try {
+      encodedHash = extractQuizHashFromInput(quizUrl);
+    } catch (error) {
+      showEditOverlayMessage(error.message, true);
+      return;
+    }
+
+    let importedQuiz;
+    try {
+      const decodedQuiz = await decompressQuiz(encodedHash);
+      importedQuiz = validateAndNormalizeQuizData(decodedQuiz);
+    } catch {
+      showEditOverlayMessage("Could not decode that quiz link. Please check the URL.", true);
+      return;
+    }
+
+    const expectedPassword = typeof importedQuiz.p === "string" ? importedQuiz.p : "";
+    if (expectedPassword && enteredPassword !== expectedPassword) {
+      showEditOverlayMessage("Incorrect password for this quiz.", true);
+      return;
+    }
+
+    pendingCreatorQuizData = importedQuiz;
+    hideEditOverlay();
+    window.location.hash = "create";
+  }
+
+  function cancelEditQuizForm() {
+    hideEditOverlay();
+    if (window.location.hash.slice(1) === "edit") {
+      window.location.hash = "";
+    }
+  }
+
+  function initEditOverlay() {
+    document.getElementById("edit-quiz-form").onsubmit = submitEditQuizForm;
+    document.getElementById("edit-overlay-cancel-btn").onclick = cancelEditQuizForm;
+    document.getElementById("edit-overlay").onclick = (event) => {
+      if (event.target.id === "edit-overlay") {
+        cancelEditQuizForm();
+      }
+    };
+  }
+
   // =============================================
   //  QUIZ CREATOR
   // =============================================
-  function showCreatorView() {
+  function showCreatorView(prefillQuizData = null) {
+    hideEditOverlay();
     document.getElementById("main-view").classList.add("hidden");
     document.getElementById("creator-view").classList.remove("hidden");
     document.getElementById("quiz-view").classList.add("hidden");
-    initCreator();
+    initCreator(prefillQuizData);
   }
 
   let questionCount = 0;
 
-  function initCreator() {
+  function resetGeneratedLinkOutput() {
+    const linkOutput = document.getElementById("link-output");
+    const linkMessage = document.getElementById("link-message");
+    const linkInput = document.getElementById("quiz-link");
+    linkOutput.classList.add("hidden");
+    linkMessage.textContent = "";
+    linkMessage.classList.add("hidden");
+    linkMessage.classList.remove("error");
+    linkInput.value = "";
+  }
+
+  function initCreator(prefillQuizData = null) {
     document.getElementById("questions-container").innerHTML = "";
     questionCount = 0;
-    addQuestion();
+    document.getElementById("quiz-name-input").value = "";
+    document.getElementById("quiz-password-input").value = "";
+    document.getElementById("show-answer-toggle").checked = true;
+    document.getElementById("show-final-results-toggle").checked = true;
+    resetGeneratedLinkOutput();
 
-    document.getElementById("add-question-btn").onclick = addQuestion;
+    if (prefillQuizData) {
+      document.getElementById("quiz-name-input").value = prefillQuizData.n || "";
+      document.getElementById("quiz-password-input").value = prefillQuizData.p || "";
+      document.getElementById("show-answer-toggle").checked = prefillQuizData.sa !== false;
+      document.getElementById("show-final-results-toggle").checked = prefillQuizData.sr !== false;
+
+      if (Array.isArray(prefillQuizData.qs) && prefillQuizData.qs.length > 0) {
+        prefillQuizData.qs.forEach((question) => addQuestion(question));
+      } else {
+        addQuestion();
+      }
+    } else {
+      addQuestion();
+    }
+
+    document.getElementById("add-question-btn").onclick = () => addQuestion();
     document.getElementById("generate-link-btn").onclick = generateLink;
     document.getElementById("copy-link-btn").onclick = copyLink;
   }
 
-  function addQuestion() {
+  function addQuestion(initialQuestionData = null) {
     questionCount++;
     const idx = questionCount;
     const card = document.createElement("div");
@@ -397,14 +560,84 @@
       addOption(card);
     };
 
-    // Seed one accepted answer by default
-    addAnswer(card);
+    if (initialQuestionData) {
+      populateQuestionCard(card, initialQuestionData);
+    } else {
+      // Seed one accepted answer by default
+      addAnswer(card);
 
-    // Seed two options for MC
-    addOption(card);
-    addOption(card);
+      // Seed two options for MC
+      addOption(card);
+      addOption(card);
 
-    toggleType(card, "text");
+      toggleType(card, "text");
+      syncImageAttributionVisibility(card);
+    }
+  }
+
+  function populateQuestionCard(card, questionData) {
+    card.querySelector(".q-text").value = typeof questionData.q === "string" ? questionData.q : "";
+    card.querySelector(".q-note").value =
+      typeof questionData.nt === "string" ? questionData.nt : "";
+    card.querySelector(".q-image").value =
+      typeof questionData.i === "string" ? questionData.i : "";
+    card.querySelector(".q-image-attribution").value =
+      typeof questionData.ia === "string" ? questionData.ia : "";
+
+    const questionType = QUESTION_TYPES.has(questionData.t) ? questionData.t : "text";
+    const typeSelect = card.querySelector(".q-type");
+    typeSelect.value = questionType;
+    toggleType(card, questionType);
+
+    if (questionType === "text" || questionType === "numerical") {
+      const answersList = card.querySelector(".answers-list");
+      answersList.innerHTML = "";
+
+      const answers =
+        Array.isArray(questionData.a) && questionData.a.length > 0 ? questionData.a : [""];
+      answers.forEach((answer) => addAnswer(card, String(answer)));
+
+      if (questionType === "text") {
+        card.querySelector(".q-case-sensitive").checked = questionData.cs === true;
+      }
+    } else {
+      card.querySelector(".q-randomize-options").checked = questionData.ro === true;
+      if (questionType === "multiple_response") {
+        card.querySelector(".q-require-all-correct").checked = questionData.rac !== false;
+      }
+
+      const optionsList = card.querySelector(".options-list");
+      optionsList.innerHTML = "";
+      const normalizedAnswers = new Set(
+        (Array.isArray(questionData.a) ? questionData.a : []).map((answer) =>
+          String(answer).toLowerCase()
+        )
+      );
+
+      const options =
+        Array.isArray(questionData.o) && questionData.o.length > 0 ? questionData.o : [""];
+      options.forEach((option) => {
+        const optionValue = String(option);
+        addOption(card, optionValue, normalizedAnswers.has(optionValue.toLowerCase()));
+      });
+
+      if (questionType === "multiple_choice") {
+        const checkedOptions = Array.from(
+          card.querySelectorAll(".options-list .option-correct:checked")
+        );
+        checkedOptions.forEach((input, idx) => {
+          input.checked = idx === 0;
+        });
+
+        if (checkedOptions.length === 0) {
+          const firstOption = card.querySelector(".options-list .option-correct");
+          if (firstOption) {
+            firstOption.checked = true;
+          }
+        }
+      }
+    }
+
     syncImageAttributionVisibility(card);
   }
 
@@ -496,7 +729,7 @@
     });
   }
 
-  function addOption(card) {
+  function addOption(card, optionText = "", isCorrect = false) {
     const list = card.querySelector(".options-list");
     const row = document.createElement("div");
     row.className = "option-row";
@@ -531,9 +764,12 @@
     list.appendChild(row);
 
     syncOptionControlType(card, card.querySelector(".q-type").value);
+
+    row.querySelector(".option-text").value = String(optionText);
+    optionCorrect.checked = Boolean(isCorrect);
   }
 
-  function addAnswer(card) {
+  function addAnswer(card, answerValue = "") {
     const list = card.querySelector(".answers-list");
     const row = document.createElement("div");
     row.className = "answer-row";
@@ -544,6 +780,7 @@
 
     row.querySelector("button").onclick = () => row.remove();
     list.appendChild(row);
+    row.querySelector(".answer-value").value = String(answerValue);
     syncAnswerInputType(card, card.querySelector(".q-type").value);
   }
 
@@ -556,6 +793,7 @@
 
   function buildQuizData() {
     const quizName = document.getElementById("quiz-name-input").value.trim();
+    const quizPassword = document.getElementById("quiz-password-input").value.trim();
     const showAnswer = document.getElementById("show-answer-toggle").checked;
     const showFinalResults = document.getElementById("show-final-results-toggle").checked;
     const cards = document.querySelectorAll(".question-card");
@@ -625,6 +863,10 @@
     const data = { sv: SCHEMA_VERSION, sa: showAnswer, sr: showFinalResults, qs: questions };
     if (quizName) {
       data.n = quizName;
+    }
+
+    if (quizPassword) {
+      data.p = quizPassword;
     }
 
     return data;
@@ -765,6 +1007,7 @@
   }
 
   async function showQuizView(hash) {
+    hideEditOverlay();
     document.getElementById("main-view").classList.add("hidden");
     document.getElementById("creator-view").classList.add("hidden");
     document.getElementById("quiz-view").classList.remove("hidden");
@@ -1056,6 +1299,7 @@
   }
 
   // --- Init ---
+  initEditOverlay();
   window.addEventListener("hashchange", route);
   setCopyrightYear();
   route();

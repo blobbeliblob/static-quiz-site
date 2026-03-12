@@ -11,6 +11,9 @@ schema = {
   // n: custom quiz name shown when starting the quiz (optional)
   "n": "General Knowledge Challenge",
 
+  // p: optional password required to unlock quiz editing
+  "p": "quiz-password",
+
   // qs: questions array
   "qs": [
     {

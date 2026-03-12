@@ -128,6 +128,9 @@ body {
 }
 
 .main-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
   margin-bottom: 1.4rem;
 }
 
@@ -175,6 +178,52 @@ body {
 
 .hidden {
   display: none !important;
+}
+
+.edit-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(21, 27, 51, 0.45);
+}
+
+.edit-overlay-card {
+  width: min(560px, 100%);
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-level);
+  padding: 1.15rem;
+}
+
+.edit-overlay-card h2 {
+  margin-bottom: 0.5rem;
+  color: var(--color-brand);
+}
+
+.overlay-message {
+  border-radius: var(--radius-md);
+  padding: 0.65rem 0.8rem;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+}
+
+.overlay-message.error {
+  background: rgba(var(--color-brand-rgb), 0.16);
+  border: 1px solid rgba(var(--color-brand-rgb), 0.32);
+  color: var(--color-brand);
+}
+
+.edit-overlay-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
 }
 
 h1,
@@ -322,6 +371,7 @@ input[type="radio"]:focus-visible {
 
 input[type="text"],
 input[type="url"],
+input[type="password"],
 input[type="number"],
 select,
 textarea {
@@ -338,6 +388,7 @@ textarea {
 
 input[type="text"]:focus,
 input[type="url"]:focus,
+input[type="password"]:focus,
 input[type="number"]:focus,
 select:focus,
 textarea:focus {
@@ -758,6 +809,19 @@ select:hover {
   #create-new-link {
     width: 100%;
     margin: 0.3rem 0 0;
+  }
+
+  .main-actions .btn {
+    flex: 1 1 180px;
+    text-align: center;
+  }
+
+  .edit-overlay-actions {
+    flex-direction: column-reverse;
+  }
+
+  .edit-overlay-actions .btn {
+    width: 100%;
   }
 
   .site-footer {

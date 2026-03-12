@@ -32,6 +32,7 @@
 
       <div class="main-actions">
         <a href="#create" class="btn btn-primary">Create a Quiz</a>
+        <a href="#edit" class="btn btn-secondary">Edit a Quiz</a>
       </div>
 
       <section class="example-quizzes">
@@ -51,6 +52,11 @@
       <div class="form-group">
         <label for="quiz-name-input">Quiz Name (optional)</label>
         <input type="text" id="quiz-name-input" placeholder="e.g. Weekend Trivia Challenge">
+      </div>
+
+      <div class="form-group">
+        <label for="quiz-password-input">Edit Password (optional)</label>
+        <input type="password" id="quiz-password-input" placeholder="Lock quiz editing behind a password">
       </div>
 
       <div class="form-group">
@@ -124,6 +130,34 @@
       ><img src="./GitHub_Invertocat_Black.svg" class="footer-github-icon" alt="" aria-hidden="true"></a>
       </p>
     </footer>
+  </div>
+
+  <div
+    id="edit-overlay"
+    class="edit-overlay hidden"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="edit-overlay-title"
+  >
+    <div class="edit-overlay-card">
+      <h2 id="edit-overlay-title">Edit an Existing Quiz</h2>
+      <p class="main-muted">Paste a QuizURL link and password to load it into the creator.</p>
+      <form id="edit-quiz-form">
+        <div class="form-group">
+          <label for="edit-quiz-url-input">Quiz URL</label>
+          <input type="url" id="edit-quiz-url-input" placeholder="https://quizurl.eu/#..." required>
+        </div>
+        <div class="form-group">
+          <label for="edit-quiz-password-input">Password</label>
+          <input type="password" id="edit-quiz-password-input" placeholder="Only needed for protected quizzes">
+        </div>
+        <p id="edit-overlay-message" class="overlay-message hidden" aria-live="polite"></p>
+        <div class="edit-overlay-actions">
+          <button type="button" id="edit-overlay-cancel-btn" class="btn btn-secondary">Cancel</button>
+          <button type="submit" class="btn btn-primary">Load Quiz</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <script src="app.js"></script>
